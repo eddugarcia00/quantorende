@@ -238,14 +238,26 @@
     }
 
     async function carregarIndicadores() {
-      const res = await fetch("https://eddu-cdi-proxy.pages.dev/api");
-      const data = await res.json();
+  try {
+    const selic = await fetch(`${proxy}${encodeURIComponent("https://api.bcb.gov.br/dados/serie/bcdata.sgs.4189/dados/ultimos/1?formato=json")}`);
+    const ipca = await fetch(`${proxy}${encodeURIComponent("https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados/ultimos/1?formato=json")}`);
+    const ipca12 = await fetch(`${proxy}${encodeURIComponent("https://api.bcb.gov.br/dados/serie/bcdata.sgs.13522/dados/ultimos/1?formato=json")}`);
+    const dolar = await fetch(`${proxy}${encodeURIComponent("https://economia.awesomeapi.com.br/json/last/USD-BRL")}`);
 
-      document.getElementById('selicValor').innerText = data.selic?.toFixed(2).replace('.', ',') + '%';
-      document.getElementById('ipcaMensal').innerText = data.ipca_mensal?.toFixed(2).replace('.', ',') + '%';
-      document.getElementById('ipcaAnual').innerText = data.ipca_acumulado_12m?.toFixed(2).replace('.', ',') + '%';
-      document.getElementById('dolarValor').innerText = 'R$ ' + data.dolar?.toFixed(2).replace('.', ',');
-    }
+    const selicData = JSON.parse((await selic.json()).contents);
+    const ipcaData = JSON.parse((await ipca.json()).contents);
+    const ipca12Data = JSON.parse((await ipca12.json()).contents);
+    const dolarData = JSON.parse((await dolar.json()).contents);
+
+    document.getElementById('selic').innerText = `SELIC: ${parseFloat(selicData[0].valor).toFixed(2)}%`;
+    document.getElementById('ipca').innerText = `IPCA (último mês): ${parseFloat(ipcaData[0].valor).toFixed(2)}%`;
+    document.getElementById('ipca12').innerText = `IPCA (12 meses): ${parseFloat(ipca12Data[0].valor).toFixed(2)}%`;
+    document.getElementById('dolar').innerText = `Dólar: R$ ${parseFloat(dolarData.USDBRL.bid).toFixed(2)}`;
+  } catch (error) {
+    console.error("Erro ao carregar indicadores:", error);
+  }
+}
+
 
     carregarIndicadores();
   </script>
