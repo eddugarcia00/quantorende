@@ -29,7 +29,7 @@
 
     .calculator input[type="text"],
     .calculator input[type="number"] {
-      width: 100%; /* Restaurado para ocupar toda a largura */
+      width: 100%;
       padding: 10px;
       font-size: 1rem;
       margin-top: 5px;
@@ -256,7 +256,7 @@
           msg.innerHTML += `<br><small>Erro ao buscar CDI atual. Usando taxa de ${cdiAtual.toFixed(2)}% como base.</small>`;
         }
         taxaAnual = (cdiAtual * percentual) / 100;
-        msg.innerHTML = `Resultado baseado na projeção do CDI atual (${cdiAtual.toFixed(2)}%) e percentual aplicado (${percentual}%).<br><b>CDI segue de perto a Selic.</b>`;
+        msg.innerHTML = `Atenção: Qualquer pós-fixado tem taxas variáveis durante o ano. Por isso, fazemos uma projeção usando apenas estimativas em cima do CDI atual.`;
       }
 
       const taxaMensal = Math.pow(1 + taxaAnual / 100, 1 / 12) - 1;
