@@ -289,31 +289,53 @@
 
     // Buscar indicadores econômicos com fallback
     async function carregarIndicadores() {
+      // Selic
       try {
-        const selic = await fetch("https://api.bcb.gov.br/dados/serie/bcdata.sgs.4189/dados/ultimos/1?formato=json");
-        const selicData = await selic.json();
-        document.getElementById("selic").textContent = `${parseFloat(selicData[0].valor).toFixed(2).replace('.', ',')}%`;
+        const selicResponse = await fetch("https://api.bcb.gov.br/dados/serie/bcdata.sgs.4189/dados/ultimos/1?formato=json");
+        const selicData = await selicResponse.json();
+        if (selicData && selicData.length > 0) {
+          const selicValor = parseFloat(selicData[0].valor).toFixed(2).replace('.', ',');
+          document.getElementById("selic").textContent = `${selicValor}%`;
+        } else {
+          throw new Error("Dados de Selic vazios");
+        }
       } catch (error) {
+        console.error("Erro ao carregar Selic:", error);
         document.getElementById("selic").textContent = "Erro ao carregar";
       }
 
+      // IPCA
       try {
-        const ipca = await fetch("https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados/ultimos/1?formato=json");
-        const ipcaData = await ipca.json();
-        document.getElementById("ipca").textContent = `${parseFloat(ipcaData[0].valor).toFixed(2).replace('.', ',')}%`;
+        const ipcaResponse = await fetch("https://api.bcb.gov.br/dados/serie/bcdata Annabelle.sgs.433/dados/ultimos/1?formato=json");
+        const ipcaData = await ipcaResponse.json();
+        if (ipcaData && ipcaData.length > 0) {
+          const ipcaValor = parseFloat(ipcaData[0].valor).toFixed(2).replace('.', ',');
+          document.getElementById("ipca").textContent = `${ipcaValor}%`;
+        } else {
+          throw new Error("Dados de IPCA vazios");
+        }
       } catch (error) {
+        console.error("Erro ao carregar IPCA:", error);
         document.getElementById("ipca").textContent = "Erro ao carregar";
       }
 
+      // Dólar
       try {
-        const dolar = await fetch("https://economia.awesomeapi.com.br/json/last/USD-BRL");
-        const dolarData = await dolar.json();
-        document.getElementById("dolar").textContent = `R$ ${parseFloat(dolarData.USDBRL.bid).toFixed(2).replace('.', ',')}`;
+        const dolarResponse = await fetch("https://economia.awesomeapi.com.br/json/last/USD-BRL");
+        const dolarData = await dolarResponse.json();
+        if (dolarData && dolarData.USDBRL && dolarData.USDBRL.bid) {
+          const dolarValor = parseFloat(dolarData.USDBRL.bid).toFixed(2).replace('.', ',');
+          document.getElementById("dolar").textContent = `R$ ${dolarValor}`;
+        } else {
+          throw new Error("Dados de Dólar vazios");
+        }
       } catch (error) {
+        console.error("Erro ao carregar Dólar:", error);
         document.getElementById("dolar").textContent = "Erro ao carregar";
       }
     }
 
+    // Chama a função ao carregar a página
     carregarIndicadores();
   </script>
 </body>
