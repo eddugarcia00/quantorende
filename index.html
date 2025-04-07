@@ -1,127 +1,311 @@
-import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-
-export default function CalculadoraJurosCompostos() {
-  const [valorInicial, setValorInicial] = useState(1000);
-  const [taxa, setTaxa] = useState(13.65); // Taxa padrão (SELIC)
-  const [periodo, setPeriodo] = useState(12); // em meses
-  const [tipoInvestimento, setTipoInvestimento] = useState("cdb"); // "cdb" ou "lci"
-  const [tipoIndexacao, setTipoIndexacao] = useState("pos"); // "pos" ou "pre"
-  const [resultado, setResultado] = useState(null);
-
-  const calcular = () => {
-    const valor = parseFloat(valorInicial);
-    const taxaDecimal = parseFloat(taxa) / 100;
-    const meses = parseInt(periodo);
-
-    let montanteBruto = valor * Math.pow(1 + taxaDecimal / 12, meses);
-    let montanteLiquido = montanteBruto;
-
-    if (tipoIndexacao === "pos") {
-      if (tipoInvestimento === "cdb") {
-        // Aplicação de IR regressivo
-        let aliquotaIR = 0.225;
-        if (meses > 6 && meses <= 12) aliquotaIR = 0.20;
-        else if (meses > 12 && meses <= 24) aliquotaIR = 0.175;
-        else if (meses > 24) aliquotaIR = 0.15;
-
-        const rendimento = montanteBruto - valor;
-        const imposto = rendimento * aliquotaIR;
-        montanteLiquido = montanteBruto - imposto;
-      } else if (tipoInvestimento === "lci") {
-        // LCI/LCA são isentos de IR
-        montanteLiquido = montanteBruto;
-      }
-    } else {
-      // Para tipo "pré", aplicar mesmo cálculo (ajuste conforme necessário futuramente)
-      montanteLiquido = montanteBruto;
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora de Juros Compostos</title>
+  <style>
+    /* Seu estilo original mantido, sem alterações */
+    body {
+      background-color: #f2f2f2;
+      margin: 0;
+      padding: 0;
+    }
+    .calculator {
+      max-width: 400px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: 15px;
+      font-family: Arial, sans-serif;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
 
-    setResultado({
-      bruto: montanteBruto.toFixed(2),
-      liquido: montanteLiquido.toFixed(2),
-    });
-  };
+    .calculator h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 1.4rem;
+    }
 
-  return (
-    <div className="flex justify-center p-4">
-      <Card className="w-full max-w-md shadow-xl rounded-2xl">
-        <CardContent className="space-y-4 p-6">
-          <h2 className="text-xl font-bold text-center">Calculadora de Investimentos</h2>
+    .calculator label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
 
-          <div>
-            <label>Valor Inicial (R$):</label>
-            <input
-              type="number"
-              value={valorInicial}
-              onChange={(e) => setValorInicial(e.target.value)}
-              className="w-full p-2 border rounded"
-            />
-          </div>
+    .calculator input[type="text"],
+    .calculator input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      font-size: 1rem;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      box-sizing: border-box;
+      text-align: left;
+    }
 
-          <div>
-            <label>Taxa (% ao ano):</label>
-            <input
-              type="number"
-              value={taxa}
-              onChange={(e) => setTaxa(e.target.value)}
-              className="w-full p-2 border rounded"
-            />
-          </div>
+    .radio-calc-wrapper,
+    .tipo-rendimento-wrapper {
+      margin-top: 15px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: center;
+    }
 
-          <div>
-            <label>Período (meses):</label>
-            <input
-              type="number"
-              value={periodo}
-              onChange={(e) => setPeriodo(e.target.value)}
-              className="w-full p-2 border rounded"
-            />
-          </div>
+    .radio-calc-wrapper label,
+    .tipo-rendimento-wrapper label {
+      font-weight: normal;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
 
-          <div className="flex justify-between">
-            <Button
-              variant={tipoInvestimento === "cdb" ? "default" : "outline"}
-              onClick={() => setTipoInvestimento("cdb")}
-            >
-              CDB
-            </Button>
-            <Button
-              variant={tipoInvestimento === "lci" ? "default" : "outline"}
-              onClick={() => setTipoInvestimento("lci")}
-            >
-              LCI/LCA
-            </Button>
-          </div>
+    .calculator button {
+      display: block;
+      width: 80%;
+      margin: 15px auto 0;
+      padding: 10px;
+      font-size: 1rem;
+      background-color: #009578;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
 
-          <div className="flex justify-between">
-            <Button
-              variant={tipoIndexacao === "pos" ? "default" : "outline"}
-              onClick={() => setTipoIndexacao("pos")}
-            >
-              Pós
-            </Button>
-            <Button
-              variant={tipoIndexacao === "pre" ? "default" : "outline"}
-              onClick={() => setTipoIndexacao("pre")}
-            >
-              Pré
-            </Button>
-          </div>
+    .calculator button:hover {
+      background-color: #007c63;
+    }
 
-          <Button className="w-full mt-4" onClick={calcular}>
-            Calcular
-          </Button>
+    #resultado {
+      margin-top: 20px;
+      font-size: 1rem;
+      text-align: center;
+      font-weight: normal;
+      background: #e6f7e6;
+      padding: 15px;
+      border-radius: 10px;
+      line-height: 1.6;
+    }
 
-          {resultado && (
-            <div className="text-center mt-4">
-              <p>Montante Bruto: <strong>R$ {resultado.bruto}</strong></p>
-              <p>Montante Líquido: <strong>R$ {resultado.liquido}</strong></p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+    .projecao {
+      color: red;
+      font-size: 0.9rem;
+      margin-top: 5px;
+      text-align: center;
+    }
+
+    .indicadores {
+      max-width: 400px;
+      margin: 30px auto;
+      padding: 15px;
+      background: #fffbe6;
+      border-radius: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+    .indicadores h3 {
+      margin-bottom: 15px;
+      font-size: 1.2rem;
+      color: #333;
+    }
+
+    .indicadores ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .indicadores li {
+      margin: 5px 0;
+      font-size: 1rem;
+      color: #444;
+    }
+
+    #percentualCDI {
+      display: none;
+    }
+
+    #taxaWrapper {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <h2>Calculadora de Juros Compostos</h2>
+
+    <div class="tipo-rendimento-wrapper">
+      <label><input type="radio" name="tipoRendimento" value="pre" checked> Pré-fixado</label>
+      <label><input type="radio" name="tipoRendimento" value="pos"> Pós-fixado (CDI)</label>
     </div>
-  );
-}
+
+    <div id="percentualCDI">
+      <label for="percentual">% do CDI:</label>
+      <input type="number" id="percentual" placeholder="Ex: 100" step="0.01">
+    </div>
+
+    <label for="valorInicial">Aporte Inicial:</label>
+    <input type="text" id="valorInicial" placeholder="R$ 0,00">
+
+    <label for="aporteMensal">Aporte Mensal:</label>
+    <input type="text" id="aporteMensal" placeholder="R$ 0,00">
+
+    <div id="taxaWrapper">
+      <label for="taxa">Taxa de Juros Anual (%):</label>
+      <input type="number" id="taxa" placeholder="Ex: 15" step="0.01">
+    </div>
+
+    <label for="periodo">Período (em meses):</label>
+    <input type="number" id="periodo" placeholder="Ex: 12">
+
+    <div class="radio-calc-wrapper">
+      <label><input type="radio" name="tipoInvestimento" value="CDB"> CDB</label>
+      <label><input type="radio" name="tipoInvestimento" value="LCI_LCA"> LCI/LCA</label>
+    </div>
+
+    <button onclick="calcularJuros()">Calcular</button>
+    <div id="resultado"></div>
+    <div class="projecao" id="projecao-msg"></div>
+  </div>
+
+  <div class="indicadores">
+    <h3>Indicadores Econômicos Atuais</h3>
+    <ul>
+      <li>Selic: <span id="selic">Carregando...</span></li>
+      <li>CDI: <span id="cdi">Carregando...</span></li>
+      <li>Dólar (comercial): <span id="dolar">Carregando...</span></li>
+    </ul>
+  </div>
+
+  <script>
+    // Máscara moeda
+    function formatarMoedaInput(input) {
+      input.addEventListener('input', function () {
+        let valor = input.value.replace(/\D/g, '');
+        valor = (parseFloat(valor) / 100).toFixed(2) + '';
+        valor = valor.replace('.', ',');
+        valor = valor.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+        input.value = 'R$ ' + valor;
+      });
+    }
+
+    formatarMoedaInput(document.getElementById('valorInicial'));
+    formatarMoedaInput(document.getElementById('aporteMensal'));
+
+    // Alternar entre pré e pós
+    const tipoRadios = document.getElementsByName('tipoRendimento');
+    const taxaWrapper = document.getElementById('taxaWrapper');
+    const percentualCDI = document.getElementById('percentualCDI');
+
+    tipoRadios.forEach(r => {
+      r.addEventListener('change', () => {
+        if (r.value === 'pos') {
+          taxaWrapper.style.display = 'none';
+          percentualCDI.style.display = 'block';
+        } else {
+          taxaWrapper.style.display = 'block';
+          percentualCDI.style.display = 'none';
+        }
+      });
+    });
+
+    async function calcularJuros() {
+      const tipoRendimento = document.querySelector('input[name="tipoRendimento"]:checked').value;
+      const tipoInvestimento = document.querySelector('input[name="tipoInvestimento"]:checked');
+      const msg = document.getElementById('projecao-msg');
+      msg.textContent = "";
+
+      if (!tipoInvestimento) {
+        alert("Por favor, selecione o tipo de investimento (CDB ou LCI/LCA).");
+        return;
+      }
+
+      const valorInicial = parseFloat(document.getElementById('valorInicial').value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+      const aporteMensal = parseFloat(document.getElementById('aporteMensal').value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+      const meses = parseInt(document.getElementById('periodo').value) || 0;
+      let taxaAnual = parseFloat(document.getElementById('taxa').value.replace(',', '.')) || 0;
+
+      if (valorInicial <= 0 && aporteMensal <= 0) {
+        alert("Insira um valor inicial ou aporte mensal válido.");
+        return;
+      }
+      if (meses <= 0) {
+        alert("O período deve ser maior que zero.");
+        return;
+      }
+      if (tipoRendimento === 'pre' && taxaAnual <= 0) {
+        alert("Insira uma taxa de juros válida para pré-fixado.");
+        return;
+      }
+      if (tipoRendimento === 'pos' && (!document.getElementById('percentual').value || parseFloat(document.getElementById('percentual').value) <= 0)) {
+        alert("Insira um percentual válido do CDI para pós-fixado.");
+        return;
+      }
+
+      if (tipoRendimento === 'pos') {
+        const percentual = parseFloat(document.getElementById('percentual').value) || 100;
+        let cdiAtual = 10.5;
+
+        try {
+          const response = await fetch('https://minha-api-indicadores.edduprodutor.workers.dev/indicadores');
+          const data = await response.json();
+          cdiAtual = parseFloat(data.cdi.replace(',', '.').replace('%', ''));
+        } catch (e) {
+          msg.innerHTML += "<br><small>Não foi possível obter o CDI atual. Usando 10,5% como padrão.</small>";
+        }
+
+        taxaAnual = (cdiAtual * percentual) / 100;
+        msg.innerHTML = "Estimativa baseada na taxa CDI atual.";
+      }
+
+      const taxaMensal = Math.pow(1 + taxaAnual / 100, 1 / 12) - 1;
+      let montante = valorInicial * Math.pow(1 + taxaMensal, meses);
+      for (let i = 1; i <= meses; i++) {
+        montante += aporteMensal * Math.pow(1 + taxaMensal, meses - i);
+      }
+
+      const totalInvestido = valorInicial + aporteMensal * meses;
+      const rendimentoBruto = montante - totalInvestido;
+      let imposto = 0;
+      let mensagem = "";
+
+      if (tipoInvestimento.value === 'CDB') {
+        let aliquota = 0.15;
+        if (meses <= 6) aliquota = 0.225;
+        else if (meses <= 12) aliquota = 0.20;
+        else if (meses <= 24) aliquota = 0.175;
+
+        imposto = rendimentoBruto * aliquota;
+        montante -= imposto;
+
+        mensagem = `<br>Rendimento bruto: R$ ${rendimentoBruto.toFixed(2).replace('.', ',')}<br>IR: R$ ${imposto.toFixed(2).replace('.', ',')} (${(aliquota * 100).toFixed(1)}%)`;
+      }
+
+      document.getElementById('resultado').innerHTML =
+        `Valor final: R$ ${montante.toFixed(2).replace('.', ',')}<br>Total investido: R$ ${totalInvestido.toFixed(2).replace('.', ',')}${mensagem}`;
+    }
+
+    async function carregarIndicadores() {
+      try {
+        const response = await fetch('https://minha-api-indicadores.edduprodutor.workers.dev/indicadores');
+        const data = await response.json();
+        document.getElementById('selic').textContent = data.selic;
+        document.getElementById('cdi').textContent = data.cdi;
+        document.getElementById('dolar').textContent = data.dolar;
+      } catch (e) {
+        document.getElementById('selic').textContent = 'Erro';
+        document.getElementById('cdi').textContent = 'Erro';
+        document.getElementById('dolar').textContent = 'Erro';
+      }
+    }
+
+    carregarIndicadores();
+  </script>
+</body>
+</html>
