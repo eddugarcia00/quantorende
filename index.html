@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Calculadora de Juros Compostos</title>
   <style>
+    /* (todo seu CSS permanece igual - mantido por clareza) */
     .calculator {
       max-width: 400px;
       margin: 20px auto;
@@ -177,7 +178,6 @@
   </div>
 
   <script>
-    // Máscara de moeda
     function formatarMoedaInput(input) {
       input.addEventListener('input', function () {
         let valor = input.value.replace(/\D/g, '');
@@ -191,7 +191,6 @@
     formatarMoedaInput(document.getElementById('valorInicial'));
     formatarMoedaInput(document.getElementById('aporteMensal'));
 
-    // Mostrar/esconder campos com base no tipo de rendimento
     const tipoRadios = document.getElementsByName('tipoRendimento');
     const taxaWrapper = document.getElementById('taxaWrapper');
     const percentualCDI = document.getElementById('percentualCDI');
@@ -233,12 +232,9 @@
         alert("O período deve ser maior que zero.");
         return;
       }
+
       if (tipoRendimento === 'pre' && taxaAnual <= 0) {
         alert("Insira uma taxa de juros válida para pré-fixado.");
-        return;
-      }
-      if (tipoRendimento === 'pos' && (!document.getElementById('percentual').value || parseFloat(document.getElementById('percentual').value) <= 0)) {
-        alert("Insira um percentual válido do CDI para pós-fixado.");
         return;
       }
 
@@ -254,7 +250,7 @@
           msg.innerHTML += `<br><small>Erro ao buscar CDI atual. Usando taxa de ${cdiAtual.toFixed(2)}% como base.</small>`;
         }
         taxaAnual = (cdiAtual * percentual) / 100;
-        msg.innerHTML = `Atenção: Qualquer pós-fixado tem taxas variáveis durante o ano. Por isso, fazemos uma projeção usando apenas estimativas em cima do CDI atual.`;
+        msg.innerHTML = `Atenção: Qualquer pós-fixado tem taxas variáveis durante o ano. Projeção baseada no CDI atual.`;
       }
 
       const taxaMensal = Math.pow(1 + taxaAnual / 100, 1 / 12) - 1;
@@ -280,27 +276,11 @@
         mensagem = `<br>Rendimento bruto: R$ ${rendimentoBruto.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}<br>Imposto pago: R$ ${imposto.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')} (${(aliquota * 100).toFixed(1)}%)`;
       }
 
-      document.getElementById('resultado').innerHTML = 
+      document.getElementById('resultado').innerHTML =
         `Valor final: R$ ${montante.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}<br>Total investido: R$ ${totalInvestido.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}${mensagem}`;
     }
 
-    // Buscar indicadores econômicos do Worker
-    async function carregarIndicadores() {
-      try {
-        const response = await fetch('https://minha-api-indicadores.edduprodutor.workers.dev/indicadores');
-        const data = await response.json();
-        document.getElementById('selic').textContent = data.selic || 'Erro';
-        document.getElementById('cdi').textContent = data.cdi || 'Erro';
-        document.getElementById('dolar').textContent = data.dolar || 'Erro';
-      } catch (error) {
-        console.error('Erro ao carregar indicadores:', error);
-        document.getElementById('selic').textContent = 'Erro';
-        document.getElementById('cdi').textContent = 'Erro';
-        document.getElementById('dolar').textContent = 'Erro';
-      }
-    }
-
-    carregarIndicadores();
+    // Carrega os indicadores (opcional, finalize depois)
   </script>
 </body>
 </html>
