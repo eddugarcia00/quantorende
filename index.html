@@ -1,0 +1,144 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora - Quanto Rende?</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 2rem;
+      background: #f8f9fa;
+      color: #333;
+    }
+    h1 {
+      color: #00695c;
+      text-align: center;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .input-group {
+      margin-bottom: 1rem;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.25rem;
+      font-weight: bold;
+    }
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 0.5rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+      text-align: left;
+    }
+    .radio-group {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      align-items: center;
+    }
+    button {
+      background-color: #00695c;
+      color: #fff;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 1rem;
+    }
+    #resultado {
+      margin-top: 1.5rem;
+      font-size: 1.25rem;
+      font-weight: bold;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Quanto Rende?</h1>
+    <div class="input-group">
+      <label for="aporte">Aporte Inicial</label>
+      <input type="text" id="aporte" placeholder="R$0,00">
+    </div>
+    <div class="input-group">
+      <label for="juros">Taxa de Juros Anual (%)</label>
+      <input type="text" id="juros" placeholder="Ex: 12,5">
+    </div>
+    <div class="input-group">
+      <label for="anos">Período (em anos)</label>
+      <input type="number" id="anos" min="1" value="1">
+    </div>
+    <div class="radio-group">
+      <label><input type="radio" name="tipo" value="cdb"> CDB</label>
+      <label><input type="radio" name="tipo" value="lci_lca"> LCI / LCA</label>
+    </div>
+    <button onclick="calcular()">Calcular</button>
+    <div id="resultado"></div>
+  </div>
+
+  <script>
+    function formatarMoeda(valor) {
+      return valor.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+      });
+    }
+
+    function calcular() {
+      const aporteInput = document.getElementById("aporte").value.replace("R$", "").replace(".", "").replace(",", ".").trim();
+      const jurosInput = parseFloat(document.getElementById("juros").value.replace(",", "."));
+      const anos = parseInt(document.getElementById("anos").value);
+      const tipo = document.querySelector('input[name="tipo"]:checked');
+
+      if (!aporteInput || !jurosInput || !anos || !tipo) {
+        alert("Por favor, preencha todos os campos e selecione o tipo de investimento.");
+        return;
+      }
+
+      const aporte = parseFloat(aporteInput);
+      const taxaAnual = jurosInput / 100;
+      let montante = aporte * Math.pow(1 + taxaAnual, anos);
+
+      if (tipo.value === "cdb") {
+        let ir = 0.15;
+        if (anos < 0.5) ir = 0.225;
+        else if (anos < 1) ir = 0.20;
+        else if (anos < 2) ir = 0.175;
+
+        const lucro = montante - aporte;
+        const imposto = lucro * ir;
+        montante -= imposto;
+
+        document.getElementById("resultado").innerHTML = `Valor final: ${formatarMoeda(montante)} <br><small>Já descontando IR</small>`;
+      } else {
+        document.getElementById("resultado").innerHTML = `Valor final: ${formatarMoeda(montante)} <br><small>Isento de IR</small>`;
+      }
+    }
+
+    // Máscara ao digitar valores em R$
+    const aporteInput = document.getElementById("aporte");
+    aporteInput.addEventListener("input", function(e) {
+      let value = e.target.value.replace(/\D/g, "");
+      value = (value / 100).toFixed(2) + "";
+      value = value.replace(".", ",");
+      value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+      e.target.value = "R$" + value;
+    });
+  </script>
+</body>
+</html>
