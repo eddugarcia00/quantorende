@@ -171,7 +171,7 @@
     <h3>Indicadores Econômicos Atuais</h3>
     <ul>
       <li>Selic: <span id="selic">Carregando...</span></li>
-      <li>IPCA (12 meses): <span id="ipca">Carregando...</span></li>
+      <li>CDI: <span id="cdi">Carregando...</span></li>
       <li>Dólar (comercial): <span id="dolar">Carregando...</span></li>
     </ul>
   </div>
@@ -225,7 +225,6 @@
       const meses = parseInt(document.getElementById('periodo').value) || 0;
       let taxaAnual = parseFloat(document.getElementById('taxa').value.replace(',', '.')) || 0;
 
-      // Validações
       if (valorInicial <= 0 && aporteMensal <= 0) {
         alert("Insira um valor inicial ou aporte mensal válido.");
         return;
@@ -243,16 +242,15 @@
         return;
       }
 
-      // Cálculo para pós-fixado com CDI
       if (tipoRendimento === 'pos') {
         const percentual = parseFloat(document.getElementById('percentual').value) || 100;
         let cdiAtual;
         try {
-          const response = await fetch("https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados/ultimos/1?formato=json");
+          const response = await fetch('https://minha-api-indicadores.edduprodutor.workers.dev/indicadores');
           const data = await response.json();
-          cdiAtual = parseFloat(data[0].valor.replace(',', '.'));
+          cdiAtual = parseFloat(data.cdi.replace(',', '.').replace('%', ''));
         } catch (error) {
-          cdiAtual = 10;
+          cdiAtual = 10.50;
           msg.innerHTML += `<br><small>Erro ao buscar CDI atual. Usando taxa de ${cdiAtual.toFixed(2)}% como base.</small>`;
         }
         taxaAnual = (cdiAtual * percentual) / 100;
@@ -265,7 +263,6 @@
         montante += aporteMensal * Math.pow(1 + taxaMensal, meses - i);
       }
 
-      // Detalhamento do resultado
       const totalInvestido = valorInicial + aporteMensal * meses;
       const rendimentoBruto = montante - totalInvestido;
       let imposto = 0;
@@ -287,55 +284,22 @@
         `Valor final: R$ ${montante.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}<br>Total investido: R$ ${totalInvestido.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}${mensagem}`;
     }
 
-    // Buscar indicadores econômicos com fallback
+    // Buscar indicadores econômicos do Worker
     async function carregarIndicadores() {
-      // Selic
       try {
-        const selicResponse = await fetch("https://api.bcb.gov.br/dados/serie/bcdata.sgs.4189/dados/ultimos/1?formato=json");
-        const selicData = await selicResponse.json();
-        if (selicData && selicData.length > 0) {
-          const selicValor = parseFloat(selicData[0].valor).toFixed(2).replace('.', ',');
-          document.getElementById("selic").textContent = `${selicValor}%`;
-        } else {
-          throw new Error("Dados de Selic vazios");
-        }
+        const response = await fetch('https://minha-api-indicadores.edduprodutor.workers.dev/indicadores');
+        const data = await response.json();
+        document.getElementById('selic').textContent = data.selic || 'Erro';
+        document.getElementById('cdi').textContent = data.cdi || 'Erro';
+        document.getElementById('dolar').textContent = data.dolar || 'Erro';
       } catch (error) {
-        console.error("Erro ao carregar Selic:", error);
-        document.getElementById("selic").textContent = "Erro ao carregar";
-      }
-
-      // IPCA
-      try {
-        const ipcaResponse = await fetch("https://api.bcb.gov.br/dados/serie/bcdata Annabelle.sgs.433/dados/ultimos/1?formato=json");
-        const ipcaData = await ipcaResponse.json();
-        if (ipcaData && ipcaData.length > 0) {
-          const ipcaValor = parseFloat(ipcaData[0].valor).toFixed(2).replace('.', ',');
-          document.getElementById("ipca").textContent = `${ipcaValor}%`;
-        } else {
-          throw new Error("Dados de IPCA vazios");
-        }
-      } catch (error) {
-        console.error("Erro ao carregar IPCA:", error);
-        document.getElementById("ipca").textContent = "Erro ao carregar";
-      }
-
-      // Dólar
-      try {
-        const dolarResponse = await fetch("https://economia.awesomeapi.com.br/json/last/USD-BRL");
-        const dolarData = await dolarResponse.json();
-        if (dolarData && dolarData.USDBRL && dolarData.USDBRL.bid) {
-          const dolarValor = parseFloat(dolarData.USDBRL.bid).toFixed(2).replace('.', ',');
-          document.getElementById("dolar").textContent = `R$ ${dolarValor}`;
-        } else {
-          throw new Error("Dados de Dólar vazios");
-        }
-      } catch (error) {
-        console.error("Erro ao carregar Dólar:", error);
-        document.getElementById("dolar").textContent = "Erro ao carregar";
+        console.error('Erro ao carregar indicadores:', error);
+        document.getElementById('selic').textContent = 'Erro';
+        document.getElementById('cdi').textContent = 'Erro';
+        document.getElementById('dolar').textContent = 'Erro';
       }
     }
 
-    // Chama a função ao carregar a página
     carregarIndicadores();
   </script>
 </body>
