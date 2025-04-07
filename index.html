@@ -3,69 +3,66 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quanto Rende</title>
+  <title>Calculadora de Juros Compostos</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .currency-input {
-      padding-left: 2rem;
+      padding-left: 2.5rem;
     }
     .currency-prefix {
       position: absolute;
-      left: 10px;
+      left: 12px;
       top: 50%;
       transform: translateY(-50%);
       pointer-events: none;
       color: gray;
     }
-    @media (max-width: 768px) {
-      .container {
-        padding: 1rem;
-      }
-    }
   </style>
 </head>
-<body class="bg-green-50 text-gray-800">
-  <div class="container mx-auto max-w-lg p-6">
-    <h1 class="text-3xl font-bold mb-6 text-center text-green-700">Calculadora de Juros Compostos</h1>
-    
-    <div class="mb-4">
-      <label class="block mb-1 font-medium">Aporte inicial</label>
-      <div class="relative">
-        <span class="currency-prefix">R$</span>
-        <input type="text" id="aporte" class="currency-input w-full border rounded px-3 py-2" placeholder="0,00" />
+<body class="bg-white text-gray-800">
+  <div class="container mx-auto max-w-lg p-4">
+    <div class="bg-white shadow-xl rounded-2xl p-6 border">
+      <h1 class="text-2xl font-bold mb-6 text-center text-green-700">Calculadora de Juros Compostos</h1>
+
+      <div class="mb-4">
+        <label class="block mb-1 font-medium">Aporte inicial</label>
+        <div class="relative">
+          <span class="currency-prefix">R$</span>
+          <input type="text" id="aporte" class="currency-input w-full border rounded px-3 py-2" placeholder="00,00" />
+        </div>
       </div>
-    </div>
 
-    <div class="mb-4">
-      <label class="block mb-1 font-medium">Taxa de juros anual (%)</label>
-      <input type="number" id="juros" class="w-full border rounded px-3 py-2" placeholder="Ex: 13,65" step="0.01" />
-    </div>
-
-    <div class="mb-4">
-      <label class="block mb-1 font-medium">Período (em anos)</label>
-      <input type="number" id="anos" class="w-full border rounded px-3 py-2" placeholder="Ex: 2" />
-    </div>
-
-    <div class="mb-6 text-center">
-      <span class="block mb-2 font-medium">Tipo de investimento</span>
-      <div class="flex justify-center gap-6">
-        <label class="flex items-center gap-2">
-          <input type="radio" name="tipo" value="cdb" /> CDB
-        </label>
-        <label class="flex items-center gap-2">
-          <input type="radio" name="tipo" value="lci" /> LCI / LCA
-        </label>
+      <div class="mb-4">
+        <label class="block mb-1 font-medium">Taxa de juros anual (%)</label>
+        <input type="number" id="juros" class="w-full border rounded px-3 py-2" placeholder="Ex: 13,65" step="0.01" />
       </div>
-    </div>
 
-    <div class="text-center">
-      <button onclick="calcular()" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
-        Calcular
-      </button>
-    </div>
+      <div class="mb-4">
+        <label class="block mb-1 font-medium">Período (em meses)</label>
+        <input type="number" id="meses" class="w-full border rounded px-3 py-2" placeholder="Ex: 24" />
+      </div>
 
-    <div id="resultado" class="mt-6 text-lg font-semibold text-center text-green-800"></div>
-    <div id="ir-msg" class="mt-1 text-sm text-center text-gray-600"></div>
+      <div class="mb-6 text-center">
+        <span class="block mb-2 font-medium">Tipo de investimento</span>
+        <div class="flex justify-center gap-6">
+          <label class="flex items-center gap-2">
+            <input type="radio" name="tipo" value="cdb" /> CDB
+          </label>
+          <label class="flex items-center gap-2">
+            <input type="radio" name="tipo" value="lci" /> LCI / LCA
+          </label>
+        </div>
+      </div>
+
+      <div class="text-center">
+        <button onclick="calcular()" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
+          Calcular
+        </button>
+      </div>
+
+      <div id="resultado" class="mt-6 text-lg font-semibold text-center text-green-800"></div>
+      <div id="ir-msg" class="mt-1 text-sm text-center text-gray-600"></div>
+    </div>
   </div>
 
   <script>
@@ -83,7 +80,7 @@
     function calcular() {
       const aporte = formatarParaNumero(document.getElementById('aporte').value);
       const jurosAnual = parseFloat(document.getElementById('juros').value.replace(',', '.'));
-      const anos = parseFloat(document.getElementById('anos').value);
+      const meses = parseInt(document.getElementById('meses').value);
       const tipo = document.querySelector('input[name="tipo"]:checked');
 
       const resultadoDiv = document.getElementById('resultado');
@@ -95,9 +92,7 @@
       }
 
       const tipoInvestimento = tipo.value;
-
       const taxaMensal = Math.pow(1 + jurosAnual / 100, 1 / 12) - 1;
-      const meses = anos * 12;
 
       const montante = aporte * Math.pow(1 + taxaMensal, meses);
       const rendimentoBruto = montante - aporte;
@@ -106,7 +101,7 @@
       let mensagemIR = '';
 
       if (tipoInvestimento === 'cdb') {
-        const dias = anos * 365;
+        const dias = meses * 30;
         const ir = calcularIR(dias, rendimentoBruto);
         montanteFinal = montante - ir;
         mensagemIR = ' (já descontando IR)';
@@ -126,4 +121,3 @@
   </script>
 </body>
 </html>
-
