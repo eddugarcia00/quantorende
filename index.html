@@ -1,24 +1,29 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Calculadora de Juros Compostos</title>
   <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f1f1f1;
+      padding: 20px;
+    }
+
     .calculator {
       max-width: 400px;
-      margin: 20px auto;
+      margin: auto;
       padding: 20px;
       background: #f9f9f9;
       border-radius: 15px;
-      font-family: Arial, sans-serif;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
 
     .calculator h2 {
       text-align: center;
-      margin-bottom: 20px;
       font-size: 1.4rem;
+      margin-bottom: 20px;
     }
 
     .calculator label {
@@ -36,39 +41,43 @@
       border: 1px solid #ccc;
       border-radius: 10px;
       box-sizing: border-box;
-      text-align: left;
     }
 
-    .radio-calc-wrapper,
-    .tipo-rendimento-wrapper {
-      margin-top: 15px;
+    .tipo-investimento-btns {
       display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
       justify-content: center;
+      gap: 10px;
+      margin-top: 15px;
     }
 
-    .radio-calc-wrapper label,
-    .tipo-rendimento-wrapper label {
-      font-weight: normal;
-      display: flex;
-      align-items: center;
-      gap: 5px;
+    .tipo-investimento-btns button {
+      flex: 1;
+      padding: 10px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background-color: #e0e0e0;
     }
 
-    .calculator button {
-      padding: 10px 15px;
+    .tipo-investimento-btns button.active {
+      background-color: #009578;
+      color: white;
+    }
+
+    .calculator button.calc {
+      margin-top: 15px;
+      width: 100%;
+      padding: 10px;
       font-size: 1rem;
       background-color: #009578;
       color: white;
       border: none;
       border-radius: 10px;
       cursor: pointer;
-      margin-top: 15px;
     }
 
-    .calculator button:hover {
+    .calculator button.calc:hover {
       background-color: #007c63;
     }
 
@@ -79,58 +88,34 @@
       font-weight: bold;
     }
 
-    .projecao {
+    .alerta {
       color: red;
       font-size: 0.9rem;
-      margin-top: 5px;
+      text-align: center;
+      margin-top: 10px;
     }
 
     .indicadores {
-      max-width: 400px;
-      margin: 30px auto;
-      padding: 15px;
-      background: #fffbe6;
-      border-radius: 10px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-      font-family: Arial, sans-serif;
+      margin-top: 40px;
       text-align: center;
-    }
-
-    .indicadores h3 {
-      margin-bottom: 15px;
-      font-size: 1.2rem;
+      font-size: 0.9rem;
       color: #333;
     }
 
-    .indicadores ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .indicadores li {
+    .indicadores span {
+      display: block;
       margin: 5px 0;
-      font-size: 1rem;
-      color: #444;
-    }
-
-    #percentualCDI {
-      display: none;
     }
   </style>
 </head>
 <body>
+
   <div class="calculator">
     <h2>Calculadora de Juros Compostos</h2>
 
-    <div class="tipo-rendimento-wrapper">
-      <label><input type="radio" name="tipoRendimento" value="pre" checked> Pré-fixado</label>
-      <label><input type="radio" name="tipoRendimento" value="pos"> Pós-fixado (CDI)</label>
-    </div>
-
-    <div id="percentualCDI">
-      <label for="percentual">% do CDI:</label>
-      <input type="number" id="percentual" placeholder="Ex: 100" step="0.01">
+    <div class="tipo-investimento-btns">
+      <button id="btnPre" class="active">Pré-fixado</button>
+      <button id="btnPos">Pós-fixado</button>
     </div>
 
     <label for="valorInicial">Aporte Inicial:</label>
@@ -142,30 +127,64 @@
     <label for="taxa">Taxa de Juros Anual (%):</label>
     <input type="number" id="taxa" placeholder="Ex: 15" step="0.01">
 
+    <label for="percentualCDI" id="labelPercentualCDI" style="display: none;">% do CDI ao ano:</label>
+    <input type="number" id="percentualCDI" style="display: none;" placeholder="Ex: 110" step="0.01">
+
     <label for="periodo">Período (em meses):</label>
     <input type="number" id="periodo" placeholder="Ex: 12">
 
-    <div class="radio-calc-wrapper">
-      <label><input type="radio" name="tipoInvestimento" value="CDB"> CDB</label>
-      <label><input type="radio" name="tipoInvestimento" value="LCI_LCA"> LCI/LCA</label>
-    </div>
+    <button class="calc" onclick="calcularJuros()">Calcular</button>
 
-    <button onclick="calcularJuros()">Calcular</button>
     <div id="resultado"></div>
-    <div class="projecao" id="projecao-msg"></div>
+    <div class="alerta" id="alertaProjecao"></div>
   </div>
 
   <div class="indicadores">
-    <h3>Indicadores Econômicos Atuais</h3>
-    <ul>
-      <li>Selic: <span id="selic">Carregando...</span></li>
-      <li>IPCA (12 meses): <span id="ipca">Carregando...</span></li>
-      <li>Dólar (comercial): <span id="dolar">Carregando...</span></li>
-    </ul>
+    <h3>Indicadores Econômicos</h3>
+    <span id="selic">SELIC: Carregando...</span>
+    <span id="ipca">IPCA: Carregando...</span>
+    <span id="dolar">Dólar: Carregando...</span>
   </div>
 
   <script>
-    // Mascara moeda
+    const proxy = "https://api.allorigins.win/get?url=";
+
+    async function carregarIndicadores() {
+      try {
+        const selic = await fetch(`${proxy}${encodeURIComponent("https://api.bcb.gov.br/dados/serie/bcdata.sgs.4189/dados/ultimos/1?formato=json")}`);
+        const ipca = await fetch(`${proxy}${encodeURIComponent("https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados/ultimos/1?formato=json")}`);
+        const dolar = await fetch(`${proxy}${encodeURIComponent("https://economia.awesomeapi.com.br/json/last/USD-BRL")}`);
+
+        const selicData = JSON.parse((await selic.json()).contents);
+        const ipcaData = JSON.parse((await ipca.json()).contents);
+        const dolarData = JSON.parse((await dolar.json()).contents);
+
+        document.getElementById('selic').innerText = `SELIC: ${parseFloat(selicData[0].valor).toFixed(2)}%`;
+        document.getElementById('ipca').innerText = `IPCA: ${parseFloat(ipcaData[0].valor).toFixed(2)}%`;
+        document.getElementById('dolar').innerText = `Dólar: R$ ${parseFloat(dolarData.USDBRL.bid).toFixed(2)}`;
+      } catch (error) {
+        console.error("Erro ao carregar indicadores:", error);
+      }
+    }
+
+    carregarIndicadores();
+
+    document.getElementById("btnPre").onclick = () => {
+      document.getElementById("btnPre").classList.add("active");
+      document.getElementById("btnPos").classList.remove("active");
+      document.getElementById("percentualCDI").style.display = "none";
+      document.getElementById("labelPercentualCDI").style.display = "none";
+      document.getElementById("taxa").style.display = "block";
+    };
+
+    document.getElementById("btnPos").onclick = () => {
+      document.getElementById("btnPos").classList.add("active");
+      document.getElementById("btnPre").classList.remove("active");
+      document.getElementById("percentualCDI").style.display = "block";
+      document.getElementById("labelPercentualCDI").style.display = "block";
+      document.getElementById("taxa").style.display = "none";
+    };
+
     function formatarMoedaInput(input) {
       input.addEventListener('input', function () {
         let valor = input.value.replace(/\D/g, '');
@@ -179,40 +198,26 @@
     formatarMoedaInput(document.getElementById('valorInicial'));
     formatarMoedaInput(document.getElementById('aporteMensal'));
 
-    // Mostrar ou esconder campo CDI
-    const tipoRadios = document.getElementsByName('tipoRendimento');
-    tipoRadios.forEach(r => {
-      r.addEventListener('change', () => {
-        document.getElementById('percentualCDI').style.display = (r.value === 'pos') ? 'block' : 'none';
-      });
-    });
-
     async function calcularJuros() {
-      const tipoRendimento = document.querySelector('input[name="tipoRendimento"]:checked').value;
-      const tipoInvestimento = document.querySelector('input[name="tipoInvestimento"]:checked');
-      const msg = document.getElementById('projecao-msg');
-      msg.textContent = "";
-
-      if (!tipoInvestimento) {
-        alert("Por favor, selecione o tipo de investimento (CDB ou LCI/LCA).");
-        return;
-      }
-
+      const tipo = document.getElementById("btnPre").classList.contains("active") ? "pre" : "pos";
       const valorInicial = parseFloat(document.getElementById('valorInicial').value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
       const aporteMensal = parseFloat(document.getElementById('aporteMensal').value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
       const meses = parseInt(document.getElementById('periodo').value) || 0;
-      let taxaAnual = parseFloat(document.getElementById('taxa').value.replace(',', '.')) || 0;
 
-      // Se for pós, usar CDI e aplicar o percentual
-      if (tipoRendimento === 'pos') {
-        const percentual = parseFloat(document.getElementById('percentual').value) || 100;
+      let taxaAnual = 0;
+      let alertaTexto = "";
 
-        const response = await fetch("https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados/ultimos/1?formato=json");
-        const data = await response.json();
-        const cdiAtual = parseFloat(data[0].valor.replace(',', '.'));
-        taxaAnual = (cdiAtual * percentual) / 100;
+      if (tipo === "pre") {
+        taxaAnual = parseFloat(document.getElementById('taxa').value.replace(',', '.')) || 0;
+        alertaTexto = "";
+      } else {
+        const percentualCDI = parseFloat(document.getElementById('percentualCDI').value.replace(',', '.')) || 0;
+        const cdiResponse = await fetch(`${proxy}${encodeURIComponent("https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados/ultimos/1?formato=json")}`);
+        const cdiData = JSON.parse((await cdiResponse.json()).contents);
+        const cdiAtual = parseFloat(cdiData[0].valor);
 
-        msg.innerHTML = `Resultado baseado na projeção do CDI atual (${cdiAtual.toFixed(2)}%) e percentual aplicado (${percentual}%).<br><b>CDI segue de perto a Selic.</b>`;
+        taxaAnual = (percentualCDI / 100) * cdiAtual;
+        alertaTexto = "* Resultado é uma projeção com base na taxa CDI atual, que acompanha a SELIC.";
       }
 
       const taxaMensal = Math.pow(1 + taxaAnual / 100, 1 / 12) - 1;
@@ -222,49 +227,11 @@
         montante += aporteMensal * Math.pow(1 + taxaMensal, meses - i);
       }
 
-      // Desconto do IR se for CDB
-      let mensagem = "";
-      if (tipoInvestimento.value === 'CDB') {
-        let aliquota;
-        if (meses <= 6) aliquota = 0.225;
-        else if (meses <= 12) aliquota = 0.20;
-        else if (meses <= 24) aliquota = 0.175;
-        else aliquota = 0.15;
-
-        const rendimento = montante - (valorInicial + aporteMensal * meses);
-        const imposto = rendimento * aliquota;
-        montante -= imposto;
-
-        mensagem = "<br><small>Resultado já descontando IR de " + (aliquota * 100).toFixed(1) + "%</small>";
-      }
-
-      document.getElementById('resultado').innerHTML = 
-        "Valor final: R$ " + montante.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.') + mensagem;
+      document.getElementById('resultado').innerHTML =
+        "Valor final: R$ " + montante.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      document.getElementById('alertaProjecao').innerText = alertaTexto;
     }
-
-    // Buscar indicadores econômicos
-    async function carregarIndicadores() {
-      try {
-        // Selic
-        const selic = await fetch("https://api.bcb.gov.br/dados/serie/bcdata.sgs.4189/dados/ultimos/1?formato=json");
-        const selicData = await selic.json();
-        document.getElementById("selic").textContent = `${parseFloat(selicData[0].valor).toFixed(2).replace('.', ',')}%`;
-
-        // IPCA
-        const ipca = await fetch("https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados/ultimos/1?formato=json");
-        const ipcaData = await ipca.json();
-        document.getElementById("ipca").textContent = `${parseFloat(ipcaData[0].valor).toFixed(2).replace('.', ',')}%`;
-
-        // Dólar
-        const dolar = await fetch("https://economia.awesomeapi.com.br/json/last/USD-BRL");
-        const dolarData = await dolar.json();
-        document.getElementById("dolar").textContent = `R$ ${parseFloat(dolarData.USDBRL.bid).toFixed(2).replace('.', ',')}`;
-      } catch (error) {
-        console.log("Erro ao carregar indicadores:", error);
-      }
-    }
-
-    carregarIndicadores();
   </script>
+
 </body>
 </html>
