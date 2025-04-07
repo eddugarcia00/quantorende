@@ -77,6 +77,17 @@
       text-align: center;
       font-weight: bold;
     }
+
+    #mensagem-pos {
+      color: red;
+      text-align: center;
+      margin-top: 10px;
+      font-size: 0.95rem;
+    }
+
+    #percentualCDI {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -84,8 +95,8 @@
     <h2>Calculadora de Juros Compostos</h2>
 
     <div class="tipo-rendimento-wrapper">
-      <label><input type="radio" name="tipoRendimento" value="pre"> Pré-fixado</label>
-      <label><input type="radio" name="tipoRendimento" value="pos"> Pós-fixado (CDI)</label>
+      <label><input type="radio" name="tipoRendimento" value="pre" checked onchange="atualizarTipo()"> Pré-fixado</label>
+      <label><input type="radio" name="tipoRendimento" value="pos" onchange="atualizarTipo()"> Pós-fixado</label>
     </div>
 
     <label for="valorInicial">Aporte Inicial:</label>
@@ -94,33 +105,30 @@
     <label for="aporteMensal">Aporte Mensal:</label>
     <input type="text" id="aporteMensal" placeholder="R$ 0,00">
 
-    <div id="campoTaxa">
+    <label for="periodo">Período (em meses):</label>
+    <input type="number" id="periodo" placeholder="Ex: 12">
+
+    <div id="taxaFixaContainer">
       <label for="taxa">Taxa de Juros Anual (%):</label>
       <input type="number" id="taxa" placeholder="Ex: 15" step="0.01">
     </div>
 
-    <div id="campoCDI" style="display: none;">
-      <label for="percentualCDI">% do CDI:</label>
-      <input type="number" id="percentualCDI" placeholder="Ex: 120" step="0.01">
+    <div id="percentualCDI">
+      <label for="cdi">Percentual do CDI (%):</label>
+      <input type="number" id="cdi" placeholder="Ex: 120" step="0.01">
     </div>
-
-    <label for="periodo">Período (em meses):</label>
-    <input type="number" id="periodo" placeholder="Ex: 12">
 
     <div class="radio-calc-wrapper">
       <label><input type="radio" name="tipoInvestimento" value="CDB"> CDB</label>
       <label><input type="radio" name="tipoInvestimento" value="LCI_LCA"> LCI/LCA</label>
-    </div>
-
-    <div style="text-align: center; margin-top: 15px;">
       <button onclick="calcularJuros()">Calcular</button>
     </div>
 
+    <div id="mensagem-pos"></div>
     <div id="resultado"></div>
   </div>
 
   <script>
-    // Formatar campo monetário
     function formatarMoedaInput(input) {
       input.addEventListener('input', function () {
         let valor = input.value.replace(/\D/g, '');
@@ -134,62 +142,54 @@
     formatarMoedaInput(document.getElementById('valorInicial'));
     formatarMoedaInput(document.getElementById('aporteMensal'));
 
-    // Alternar campos entre pré e pós fixado
-    const campoTaxa = document.getElementById('campoTaxa');
-    const campoCDI = document.getElementById('campoCDI');
+    function atualizarTipo() {
+      const tipo = document.querySelector('input[name="tipoRendimento"]:checked').value;
+      const taxaFixaContainer = document.getElementById('taxaFixaContainer');
+      const percentualCDI = document.getElementById('percentualCDI');
+      const msg = document.getElementById('mensagem-pos');
 
-    document.querySelectorAll('input[name="tipoRendimento"]').forEach(radio => {
-      radio.addEventListener('change', () => {
-        if (radio.value === 'pre') {
-          campoTaxa.style.display = 'block';
-          campoCDI.style.display = 'none';
-        } else {
-          campoTaxa.style.display = 'none';
-          campoCDI.style.display = 'block';
-        }
-      });
-    });
-
-    async function calcularJuros() {
-      const tipoRendimento = document.querySelector('input[name="tipoRendimento"]:checked');
-      const tipoInvestimento = document.querySelector('input[name="tipoInvestimento"]:checked');
-      if (!tipoRendimento || !tipoInvestimento) {
-        alert("Por favor, selecione o tipo de rendimento e o tipo de investimento.");
-        return;
+      if (tipo === 'pre') {
+        taxaFixaContainer.style.display = 'block';
+        percentualCDI.style.display = 'none';
+        msg.innerHTML = '';
+      } else {
+        taxaFixaContainer.style.display = 'none';
+        percentualCDI.style.display = 'block';
+        msg.innerHTML = "Atenção: este é um valor estimado com base no CDI atual, que acompanha de perto a taxa SELIC. O resultado é uma projeção.";
       }
+    }
 
+    function calcularJuros() {
       const valorInicial = parseFloat(document.getElementById('valorInicial').value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
       const aporteMensal = parseFloat(document.getElementById('aporteMensal').value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
       const meses = parseInt(document.getElementById('periodo').value) || 0;
 
-      let taxaAnual = 0;
+      const tipoRendimento = document.querySelector('input[name="tipoRendimento"]:checked').value;
+      let taxaMensal = 0;
 
-      if (tipoRendimento.value === 'pre') {
-        taxaAnual = parseFloat(document.getElementById('taxa').value.replace(',', '.')) || 0;
+      if (tipoRendimento === 'pre') {
+        const taxaAnual = parseFloat(document.getElementById('taxa').value.replace(',', '.')) || 0;
+        taxaMensal = Math.pow(1 + taxaAnual / 100, 1 / 12) - 1;
       } else {
-        const percentualCDI = parseFloat(document.getElementById('percentualCDI').value.replace(',', '.')) || 0;
-
-        // Buscar CDI da API do Cloudflare Workers
-        try {
-          const res = await fetch('https://eddugarciadev.edduprodutor.workers.dev');
-          const json = await res.json();
-          const cdi = parseFloat(json.cdi);
-          taxaAnual = (percentualCDI / 100) * cdi;
-        } catch (err) {
-          alert("Erro ao buscar o CDI. Tente novamente.");
-          return;
-        }
+        const percentualCDI = parseFloat(document.getElementById('cdi').value.replace(',', '.')) || 0;
+        const cdiAnual = 10.65; // CDI atual projetado (%)
+        const taxaAnual = cdiAnual * (percentualCDI / 100);
+        taxaMensal = Math.pow(1 + taxaAnual / 100, 1 / 12) - 1;
       }
 
-      const taxaMensal = Math.pow(1 + taxaAnual / 100, 1 / 12) - 1;
+      const tipoInvestimento = document.querySelector('input[name="tipoInvestimento"]:checked');
+      if (!tipoInvestimento) {
+        alert("Por favor, selecione o tipo de investimento (CDB ou LCI/LCA).");
+        return;
+      }
 
       let montante = valorInicial * Math.pow(1 + taxaMensal, meses);
       for (let i = 1; i <= meses; i++) {
         montante += aporteMensal * Math.pow(1 + taxaMensal, meses - i);
       }
 
-      // IR
       let mensagem = "";
+
       if (tipoInvestimento.value === 'CDB') {
         let aliquota;
         if (meses <= 6) aliquota = 0.225;
@@ -207,6 +207,8 @@
       document.getElementById('resultado').innerHTML =
         "Valor final: R$ " + montante.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.') + mensagem;
     }
+
+    atualizarTipo(); // Inicializa a visualização correta
   </script>
 </body>
 </html>
