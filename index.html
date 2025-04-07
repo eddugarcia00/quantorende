@@ -29,7 +29,7 @@
 
     .calculator input[type="text"],
     .calculator input[type="number"] {
-     elas width: 100%;
+      width: 100%; /* Restaurado para ocupar toda a largura */
       padding: 10px;
       font-size: 1rem;
       margin-top: 5px;
@@ -200,12 +200,10 @@
         if (r.value === 'pos') {
           taxaWrapper.style.display = 'none';
           percentualCDI.style.display = 'block';
-          // Move o % do CDI para o lugar da taxa
           taxaWrapper.parentNode.insertBefore(percentualCDI, taxaWrapper.nextSibling);
         } else {
           taxaWrapper.style.display = 'block';
           percentualCDI.style.display = 'none';
-          // Volta a taxa para o lugar original
           percentualCDI.parentNode.insertBefore(taxaWrapper, percentualCDI.nextSibling);
         }
       });
@@ -254,7 +252,7 @@
           const data = await response.json();
           cdiAtual = parseFloat(data[0].valor.replace(',', '.'));
         } catch (error) {
-          cdiAtual = 10; // Fallback
+          cdiAtual = 10;
           msg.innerHTML += `<br><small>Erro ao buscar CDI atual. Usando taxa de ${cdiAtual.toFixed(2)}% como base.</small>`;
         }
         taxaAnual = (cdiAtual * percentual) / 100;
