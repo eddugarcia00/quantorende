@@ -29,7 +29,7 @@
 
     .calculator input[type="text"],
     .calculator input[type="number"] {
-      width: 100%;
+     elas width: 100%;
       padding: 10px;
       font-size: 1rem;
       margin-top: 5px;
@@ -59,8 +59,8 @@
 
     .calculator button {
       display: block;
-      width: 80%; /* Botão mais largo */
-      margin: 15px auto 0; /* Centralizado */
+      width: 80%;
+      margin: 15px auto 0;
       padding: 10px;
       font-size: 1rem;
       background-color: #009578;
@@ -76,13 +76,13 @@
 
     #resultado {
       margin-top: 20px;
-      font-size: 1rem; /* Letras menores */
+      font-size: 1rem;
       text-align: center;
-      font-weight: normal; /* Menos pesado */
+      font-weight: normal;
       background: #e6f7e6;
       padding: 15px;
       border-radius: 10px;
-      line-height: 1.6; /* Mais espaçamento entre linhas */
+      line-height: 1.6;
     }
 
     .projecao {
@@ -125,7 +125,7 @@
     }
 
     #taxaWrapper {
-      display: block; /* Controlado por JS */
+      display: block;
     }
   </style>
 </head>
@@ -200,16 +200,18 @@
         if (r.value === 'pos') {
           taxaWrapper.style.display = 'none';
           percentualCDI.style.display = 'block';
-          taxaWrapper.parentNode.insertBefore(percentualCDI, taxaWrapper); // Move % CDI para o lugar da taxa
+          // Move o % do CDI para o lugar da taxa
+          taxaWrapper.parentNode.insertBefore(percentualCDI, taxaWrapper.nextSibling);
         } else {
           taxaWrapper.style.display = 'block';
           percentualCDI.style.display = 'none';
-          percentualCDI.parentNode.insertBefore(taxaWrapper, percentualCDI.nextSibling); // Volta ao lugar original
+          // Volta a taxa para o lugar original
+          percentualCDI.parentNode.insertBefore(taxaWrapper, percentualCDI.nextSibling);
         }
       });
     });
 
-    async function calculatingInterest() {
+    async function calcularJuros() {
       const tipoRendimento = document.querySelector('input[name="tipoRendimento"]:checked').value;
       const tipoInvestimento = document.querySelector('input[name="tipoInvestimento"]:checked');
       const msg = document.getElementById('projecao-msg');
@@ -256,4 +258,65 @@
           msg.innerHTML += `<br><small>Erro ao buscar CDI atual. Usando taxa de ${cdiAtual.toFixed(2)}% como base.</small>`;
         }
         taxaAnual = (cdiAtual * percentual) / 100;
-        msg.innerHTML = `Resultado
+        msg.innerHTML = `Resultado baseado na projeção do CDI atual (${cdiAtual.toFixed(2)}%) e percentual aplicado (${percentual}%).<br><b>CDI segue de perto a Selic.</b>`;
+      }
+
+      const taxaMensal = Math.pow(1 + taxaAnual / 100, 1 / 12) - 1;
+      let montante = valorInicial * Math.pow(1 + taxaMensal, meses);
+      for (let i = 1; i <= meses; i++) {
+        montante += aporteMensal * Math.pow(1 + taxaMensal, meses - i);
+      }
+
+      // Detalhamento do resultado
+      const totalInvestido = valorInicial + aporteMensal * meses;
+      const rendimentoBruto = montante - totalInvestido;
+      let imposto = 0;
+      let mensagem = "";
+
+      if (tipoInvestimento.value === 'CDB') {
+        let aliquota;
+        if (meses <= 6) aliquota = 0.225;
+        else if (meses <= 12) aliquota = 0.20;
+        else if (meses <= 24) aliquota = 0.175;
+        else aliquota = 0.15;
+
+        imposto = rendimentoBruto * aliquota;
+        montante -= imposto;
+        mensagem = `<br>Rendimento bruto: R$ ${rendimentoBruto.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}<br>Imposto pago: R$ ${imposto.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')} (${(aliquota * 100).toFixed(1)}%)`;
+      }
+
+      document.getElementById('resultado').innerHTML = 
+        `Valor final: R$ ${montante.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}<br>Total investido: R$ ${totalInvestido.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}${mensagem}`;
+    }
+
+    // Buscar indicadores econômicos com fallback
+    async function carregarIndicadores() {
+      try {
+        const selic = await fetch("https://api.bcb.gov.br/dados/serie/bcdata.sgs.4189/dados/ultimos/1?formato=json");
+        const selicData = await selic.json();
+        document.getElementById("selic").textContent = `${parseFloat(selicData[0].valor).toFixed(2).replace('.', ',')}%`;
+      } catch (error) {
+        document.getElementById("selic").textContent = "Erro ao carregar";
+      }
+
+      try {
+        const ipca = await fetch("https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados/ultimos/1?formato=json");
+        const ipcaData = await ipca.json();
+        document.getElementById("ipca").textContent = `${parseFloat(ipcaData[0].valor).toFixed(2).replace('.', ',')}%`;
+      } catch (error) {
+        document.getElementById("ipca").textContent = "Erro ao carregar";
+      }
+
+      try {
+        const dolar = await fetch("https://economia.awesomeapi.com.br/json/last/USD-BRL");
+        const dolarData = await dolar.json();
+        document.getElementById("dolar").textContent = `R$ ${parseFloat(dolarData.USDBRL.bid).toFixed(2).replace('.', ',')}`;
+      } catch (error) {
+        document.getElementById("dolar").textContent = "Erro ao carregar";
+      }
+    }
+
+    carregarIndicadores();
+  </script>
+</body>
+</html>
