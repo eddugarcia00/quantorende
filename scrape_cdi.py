@@ -1,27 +1,24 @@
 import requests
-from bs4 import BeautifulSoup
 import json
-from datetime import datetime
 
-url = "https://statusinvest.com.br/indices/cdi"
+url = "https://statusinvest.com.br/indicadores/taxasdi"
+
 headers = {
-    "User-Agent": "Mozilla/5.0"
+    "User-Agent": "Mozilla/5.0",
+    "Accept": "application/json"
 }
 
 response = requests.get(url, headers=headers)
-soup = BeautifulSoup(response.content, "html.parser")
 
-value_element = soup.select_one("h3 span.value")
-if value_element:
-    cdi_text = value_element.text.strip().replace("%", "").replace(",", ".")
-    cdi_value = float(cdi_text)
+if response.status_code == 200:
+    data = response.json()
+    cdi = data.get("value")
 
-    cdi_data = {
-        "data": datetime.now().strftime("%Y-%m-%d"),
-        "valor": cdi_value
-    }
-
-    with open("public/cdi.json", "w") as f:
-        json.dump(cdi_data, f, indent=2)
+    if cdi:
+        with open("cdi.json", "w") as f:
+            json.dump({"cdi": cdi}, f, indent=2)
+        print(f"CDI atualizado com sucesso: {cdi}")
+    else:
+        raise Exception("Valor do CDI não encontrado na resposta.")
 else:
-    raise Exception("Não foi possível encontrar o valor do CDI.")
+    raise Exception(f"Erro ao acessar a API. Código {response.status_code}")
