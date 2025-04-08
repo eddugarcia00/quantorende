@@ -1,25 +1,31 @@
 import requests
+from bs4 import BeautifulSoup
 import json
 
-# API do Status Invest (via proxy do AllOrigins para evitar bloqueio 403)
-url = "https://api.allorigins.win/raw?url=https://statusinvest.com.br/indicadores/taxasdi"
-
+# Acessa diretamente a página do CDI no Status Invest
+url = "https://statusinvest.com.br/indices/cdi"
 headers = {
-    "User-Agent": "Mozilla/5.0",
-    "Accept": "application/json"
+    "User-Agent": "Mozilla/5.0"
 }
 
 response = requests.get(url, headers=headers)
 
 if response.status_code == 200:
-    data = response.json()
-    cdi = data.get("value")
+    soup = BeautifulSoup(response.text, "html.parser")
+    
+    # O valor do CDI está dentro de um span com atributo data-testid="index-last"
+    span = soup.find("span", {"data-testid": "index-last"})
 
-    if cdi:
-        with open("cdi.json", "w") as f:
-            json.dump({"cdi": cdi}, f, indent=2)
-        print(f"CDI atualizado com sucesso: {cdi}")
+    if span:
+        cdi_text = span.get_text().strip().replace("%", "").replace(",", ".")
+        try:
+            cdi_value = float(cdi_text)
+            with open("cdi.json", "w") as f:
+                json.dump({"cdi": cdi_value}, f, indent=2)
+            print(f"CDI atualizado com sucesso: {cdi_value}%")
+        except ValueError:
+            raise Exception("Erro ao converter valor do CDI.")
     else:
-        raise Exception("Valor do CDI não encontrado na resposta.")
+        raise Exception("Não foi possível encontrar o valor do CDI na página.")
 else:
-    raise Exception(f"Erro ao acessar a API. Código {response.status_code}")
+    raise Exception(f"Erro ao acessar a página. Código {response.status_code}")
