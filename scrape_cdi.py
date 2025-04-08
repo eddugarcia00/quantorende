@@ -1,7 +1,8 @@
 import requests
 import json
 
-url = "https://statusinvest.com.br/indicadores/taxasdi"
+# API do Status Invest (via proxy do AllOrigins para evitar bloqueio 403)
+url = "https://api.allorigins.win/raw?url=https://statusinvest.com.br/indicadores/taxasdi"
 
 headers = {
     "User-Agent": "Mozilla/5.0",
