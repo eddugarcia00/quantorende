@@ -2,41 +2,40 @@ import requests
 from bs4 import BeautifulSoup
 import json
 
-URL = "https://www.ibge.gov.br/explica/inflacao.php"
+# URL da página do IBGE com os valores de inflação
+url = "https://www.ibge.gov.br/explica/inflacao.php"
 
+# Faz a requisição
 headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+    "User-Agent": "Mozilla/5.0"
 }
-
-response = requests.get(URL, headers=headers)
+response = requests.get(url, headers=headers)
 
 if response.status_code != 200:
     raise Exception(f"Erro ao acessar a página. Código {response.status_code}")
 
+# Faz o parsing do HTML
 soup = BeautifulSoup(response.text, "html.parser")
 
-# Procura pelo título IPCA
-ipca_title = soup.find("h2", string=lambda text: text and "IPCA" in text)
+# Procura todos os elementos com class "variavel"
+variaveis = soup.select("li.variavel")
 
-if not ipca_title:
-    raise Exception("Não foi possível encontrar a seção do IPCA na página.")
+ipca_12m = None
 
-# Acha o primeiro <p> após o título que contém o valor de 12 meses
-ipca_section = ipca_title.find_next("p")
+# Busca aquele que tem o título correto
+for var in variaveis:
+    titulo = var.find("h3", class_="variavel-titulo")
+    if titulo and "IPCA acumulado de 12 meses" in titulo.text:
+        dado = var.find("p", class_="variavel-dado")
+        if dado:
+            ipca_12m = dado.text.strip()
+            break
 
-ipca_text = ipca_section.get_text(strip=True)
-
-# Procura o número referente ao acumulado em 12 meses (ex: 4,62%)
-import re
-match = re.search(r'acumulado.*?12.*?meses.*?([\d,]+)%', ipca_text, re.IGNORECASE)
-
-if not match:
+if not ipca_12m:
     raise Exception("Não foi possível extrair o valor acumulado de 12 meses do IPCA.")
 
-ipca_12m = match.group(1).replace(",", ".")
-
-# Salva o valor em um arquivo JSON
+# Salva em um arquivo JSON
 with open("ipca12m.json", "w") as f:
-    json.dump({"ipca_12_meses": float(ipca_12m)}, f, indent=2)
+    json.dump({"ipca12m": ipca_12m}, f, indent=2)
 
-print("IPCA acumulado em 12 meses salvo com sucesso:", ipca_12m)
+print(f"IPCA acumulado de 12 meses: {ipca_12m}")
