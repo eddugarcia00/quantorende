@@ -2,179 +2,142 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calculadora de Juros Compostos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quanto Rende?</title>
   <style>
-    .calculator {
-      max-width: 400px;
-      margin: 20px auto;
-      padding: 20px;
-      background: #f9f9f9;
-      border-radius: 15px;
+    body {
       font-family: Arial, sans-serif;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      background-color: #f7f9fc;
+      margin: 0;
+      padding: 20px;
+      color: #333;
     }
 
-    .calculator h2 {
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.05);
+    }
+
+    h1 {
       text-align: center;
+      font-size: 1.8em;
+      margin-bottom: 10px;
+    }
+
+    .indicadores {
+      display: flex;
+      justify-content: space-around;
+      background: #eef2f5;
+      padding: 10px;
+      border-radius: 10px;
       margin-bottom: 20px;
-      font-size: 1.4rem;
+      font-size: 0.95em;
     }
 
-    .calculator label {
+    .indicador span {
       display: block;
-      margin-top: 10px;
       font-weight: bold;
+      font-size: 1.05em;
     }
 
-    .calculator input[type="text"],
-    .calculator input[type="number"] {
-      width: 100%;
-      padding: 10px;
-      font-size: 1rem;
-      margin-top: 5px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      box-sizing: border-box;
-      text-align: left;
-    }
-
-    .radio-calc-wrapper,
-    .tipo-rendimento-wrapper {
-      margin-top: 15px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .radio-calc-wrapper label,
-    .tipo-rendimento-wrapper label {
-      font-weight: normal;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .calculator button {
+    label {
       display: block;
-      width: 80%;
-      margin: 15px auto 0;
-      padding: 10px;
-      font-size: 1rem;
-      background-color: #009578;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
+      margin: 15px 0 5px;
     }
 
-    .calculator button:hover {
-      background-color: #007c63;
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    .radio-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .radio-group label {
+      margin: 0;
     }
 
     #resultado {
       margin-top: 20px;
-      font-size: 1rem;
-      text-align: center;
-      font-weight: normal;
-      background: #e6f7e6;
+      background: #e0f7fa;
       padding: 15px;
       border-radius: 10px;
-      line-height: 1.6;
     }
 
-    .projecao {
-      color: red;
-      font-size: 0.9rem;
-      margin-top: 5px;
-      text-align: center;
-    }
-
-    .indicadores {
-      max-width: 400px;
-      margin: 30px auto;
-      padding: 15px;
-      background: #fffbe6;
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      font-size: 1em;
       border-radius: 10px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-      font-family: Arial, sans-serif;
-      text-align: center;
+      cursor: pointer;
+      width: 100%;
     }
 
-    .indicadores h3 {
-      margin-bottom: 15px;
-      font-size: 1.2rem;
-      color: #333;
-    }
-
-    .indicadores ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .indicadores li {
-      margin: 5px 0;
-      font-size: 1rem;
-      color: #444;
-    }
-
-    #percentualCDI {
-      display: none;
-    }
-
-    #taxaWrapper {
-      display: block;
+    #projecao-msg {
+      margin-top: 10px;
+      font-size: 0.9em;
+      color: #666;
     }
   </style>
 </head>
 <body>
-  <div class="calculator">
-    <h2>Calculadora de Juros Compostos</h2>
+  <div class="container">
+    <h1>Quanto Rende?</h1>
 
-    <div class="tipo-rendimento-wrapper">
+    <div class="indicadores">
+      <div class="indicador">SELIC<br><span id="selic">...</span></div>
+      <div class="indicador">CDI<br><span id="cdi">...</span></div>
+      <div class="indicador">Dólar<br><span id="dolar">...</span></div>
+    </div>
+
+    <label for="valorInicial">Valor Inicial</label>
+    <input type="text" id="valorInicial" placeholder="R$ 1.000,00">
+
+    <label for="aporteMensal">Aporte Mensal</label>
+    <input type="text" id="aporteMensal" placeholder="R$ 500,00">
+
+    <label for="periodo">Período (em meses)</label>
+    <input type="number" id="periodo" placeholder="Ex: 24">
+
+    <label>Tipo de Rendimento:</label>
+    <div class="radio-group">
       <label><input type="radio" name="tipoRendimento" value="pre" checked> Pré-fixado</label>
       <label><input type="radio" name="tipoRendimento" value="pos"> Pós-fixado (CDI)</label>
     </div>
 
-    <div id="percentualCDI">
-      <label for="percentual">% do CDI:</label>
-      <input type="number" id="percentual" placeholder="Ex: 100" step="0.01">
-    </div>
-
-    <label for="valorInicial">Aporte Inicial:</label>
-    <input type="text" id="valorInicial" placeholder="R$ 0,00">
-
-    <label for="aporteMensal">Aporte Mensal:</label>
-    <input type="text" id="aporteMensal" placeholder="R$ 0,00">
-
     <div id="taxaWrapper">
-      <label for="taxa">Taxa de Juros Anual (%):</label>
-      <input type="number" id="taxa" placeholder="Ex: 15" step="0.01">
+      <label for="taxa">Taxa Anual (%)</label>
+      <input type="text" id="taxa" placeholder="Ex: 12">
     </div>
 
-    <label for="periodo">Período (em meses):</label>
-    <input type="number" id="periodo" placeholder="Ex: 12">
+    <div id="percentualCDI" style="display: none;">
+      <label for="percentual">% do CDI</label>
+      <input type="number" id="percentual" placeholder="Ex: 100">
+    </div>
 
-    <div class="radio-calc-wrapper">
+    <label>Tipo de Investimento:</label>
+    <div class="radio-group">
+      <label><input type="radio" name="tipoInvestimento" value="LCI"> LCI/LCA</label>
       <label><input type="radio" name="tipoInvestimento" value="CDB"> CDB</label>
-      <label><input type="radio" name="tipoInvestimento" value="LCI_LCA"> LCI/LCA</label>
     </div>
 
     <button onclick="calcularJuros()">Calcular</button>
-    <div id="resultado"></div>
-    <div class="projecao" id="projecao-msg"></div>
-  </div>
 
-  <div class="indicadores">
-    <h3>Indicadores Econômicos Atuais</h3>
-    <ul>
-      <li>Selic: <span id="selic">Carregando...</span></li>
-      <li>CDI: <span id="cdi">Carregando...</span></li>
-      <li>Dólar (comercial): <span id="dolar">Carregando...</span></li>
-    </ul>
+    <div id="resultado"></div>
+    <div id="projecao-msg"></div>
   </div>
 
   <script>
@@ -288,14 +251,14 @@
         document.getElementById('selic').textContent = data.selic;
         document.getElementById('cdi').textContent = data.cdi;
         document.getElementById('dolar').textContent = data.dolar;
-      } catch {
+      } catch (error) {
         document.getElementById('selic').textContent = 'Erro';
         document.getElementById('cdi').textContent = 'Erro';
         document.getElementById('dolar').textContent = 'Erro';
       }
     }
 
-    carregarIndicadores();
+    window.addEventListener('DOMContentLoaded', carregarIndicadores);
   </script>
 </body>
 </html>
