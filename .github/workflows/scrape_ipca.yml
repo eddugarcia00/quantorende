@@ -1,12 +1,12 @@
-name: Atualizar IPCA 12M
+name: Atualizar IPCA
 
 on:
+  workflow_dispatch:
   schedule:
-    - cron: '0 3 * * *'  # Executa diariamente às 03:00 UTC
-  workflow_dispatch:  # Permite execução manual
+    - cron: '0 6 * * *'
 
 jobs:
-  scrape:
+  scrape-and-commit:
     runs-on: ubuntu-latest
 
     steps:
@@ -16,18 +16,18 @@ jobs:
       - name: Configurar Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: '3.11'
 
       - name: Instalar dependências
         run: pip install requests beautifulsoup4
 
-      - name: Executar scraper do IPCA
+      - name: Executar script de scraping do IPCA
         run: python scrape_ipca.py
 
-      - name: Commitar resultado
+      - name: Commit e push do IPCA
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add ipca12m.json
           git commit -m "Atualização diária do IPCA acumulado (12 meses)"
-          git push
+          git push https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git HEAD:main
