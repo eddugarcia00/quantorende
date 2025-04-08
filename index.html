@@ -89,6 +89,7 @@
       color: red;
       font-size: 0.9rem;
       margin-top: 5px;
+      text-align: center;
     }
 
     .indicadores {
@@ -177,7 +178,6 @@
   </div>
 
   <script>
-    // Máscara de moeda
     function formatarMoedaInput(input) {
       input.addEventListener('input', function () {
         let valor = input.value.replace(/\D/g, '');
@@ -191,7 +191,6 @@
     formatarMoedaInput(document.getElementById('valorInicial'));
     formatarMoedaInput(document.getElementById('aporteMensal'));
 
-    // Mostrar/esconder campos com base no tipo de rendimento
     const tipoRadios = document.getElementsByName('tipoRendimento');
     const taxaWrapper = document.getElementById('taxaWrapper');
     const percentualCDI = document.getElementById('percentualCDI');
@@ -200,11 +199,9 @@
         if (r.value === 'pos') {
           taxaWrapper.style.display = 'none';
           percentualCDI.style.display = 'block';
-          taxaWrapper.parentNode.insertBefore(percentualCDI, taxaWrapper.nextSibling);
         } else {
           taxaWrapper.style.display = 'block';
           percentualCDI.style.display = 'none';
-          percentualCDI.parentNode.insertBefore(taxaWrapper, percentualCDI.nextSibling);
         }
       });
     });
@@ -216,7 +213,7 @@
       msg.textContent = "";
 
       if (!tipoInvestimento) {
-        alert("Por favor, selecione o tipo de investimento (CDB ou LCI/LCA).");
+        alert("Por favor, selecione o tipo de investimento.");
         return;
       }
 
@@ -234,11 +231,11 @@
         return;
       }
       if (tipoRendimento === 'pre' && taxaAnual <= 0) {
-        alert("Insira uma taxa de juros válida para pré-fixado.");
+        alert("Insira uma taxa de juros válida.");
         return;
       }
       if (tipoRendimento === 'pos' && (!document.getElementById('percentual').value || parseFloat(document.getElementById('percentual').value) <= 0)) {
-        alert("Insira um percentual válido do CDI para pós-fixado.");
+        alert("Insira um percentual válido do CDI.");
         return;
       }
 
@@ -251,10 +248,10 @@
           cdiAtual = parseFloat(data.cdi.replace(',', '.').replace('%', ''));
         } catch (error) {
           cdiAtual = 10.50;
-          msg.innerHTML += `<br><small>Erro ao buscar CDI atual. Usando taxa de ${cdiAtual.toFixed(2)}% como base.</small>`;
+          msg.innerHTML += `<br><small>Erro ao buscar CDI. Usando taxa estimada de ${cdiAtual.toFixed(2)}%.</small>`;
         }
         taxaAnual = (cdiAtual * percentual) / 100;
-        msg.innerHTML = `Atenção: Qualquer pós-fixado tem taxas variáveis durante o ano. Por isso, fazemos uma projeção usando apenas estimativas em cima do CDI atual.`;
+        msg.innerHTML = `Atenção: Pós-fixado usa taxa estimada com base no CDI atual.`;
       }
 
       const taxaMensal = Math.pow(1 + taxaAnual / 100, 1 / 12) - 1;
@@ -277,23 +274,21 @@
 
         imposto = rendimentoBruto * aliquota;
         montante -= imposto;
-        mensagem = `<br>Rendimento bruto: R$ ${rendimentoBruto.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}<br>Imposto pago: R$ ${imposto.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')} (${(aliquota * 100).toFixed(1)}%)`;
+        mensagem = `<br>Rendimento bruto: R$ ${rendimentoBruto.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}<br>IR: R$ ${imposto.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')} (${(aliquota * 100).toFixed(1)}%)`;
       }
 
-      document.getElementById('resultado').innerHTML = 
+      document.getElementById('resultado').innerHTML =
         `Valor final: R$ ${montante.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}<br>Total investido: R$ ${totalInvestido.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}${mensagem}`;
     }
 
-    // Buscar indicadores econômicos do Worker
     async function carregarIndicadores() {
       try {
         const response = await fetch('https://minha-api-indicadores.edduprodutor.workers.dev/indicadores');
         const data = await response.json();
-        document.getElementById('selic').textContent = data.selic || 'Erro';
-        document.getElementById('cdi').textContent = data.cdi || 'Erro';
-        document.getElementById('dolar').textContent = data.dolar || 'Erro';
-      } catch (error) {
-        console.error('Erro ao carregar indicadores:', error);
+        document.getElementById('selic').textContent = data.selic;
+        document.getElementById('cdi').textContent = data.cdi;
+        document.getElementById('dolar').textContent = data.dolar;
+      } catch {
         document.getElementById('selic').textContent = 'Erro';
         document.getElementById('cdi').textContent = 'Erro';
         document.getElementById('dolar').textContent = 'Erro';
